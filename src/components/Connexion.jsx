@@ -4,7 +4,7 @@ class Connexion extends Component {
     state = {  }
     render() { 
         return ( 
-            <div className="conexionBox">
+            <div className="connexionBox">
                 <form className="connexion">
                     <input
                         type="text"
