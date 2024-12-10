@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Connexion from './components/Connexion';
 import NotFound from './components/NotFound';
 
-const myApp = () => (
+const MyApp = () => (
   <Router>
     <Routes>
       <Route path='/' element={<Connexion />} />
@@ -21,7 +21,7 @@ const myApp = () => (
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <myApp />
+    <MyApp />
   </React.StrictMode>
 );
 
