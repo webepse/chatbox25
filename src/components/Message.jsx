@@ -1,4 +1,4 @@
-const Message = ({pseudo, message}) => {
+const Message = ({pseudo,message}) => {
     return ( 
         <p className="user-message">
             {message}
@@ -7,3 +7,5 @@ const Message = ({pseudo, message}) => {
 }
  
 export default Message;
+
+
