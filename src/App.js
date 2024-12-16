@@ -1,70 +1,65 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './App.css'
+import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router';
+import './App.css';
 import Formulaire from './components/Formulaire';
 import Message from './components/Message';
-import { useParams } from 'react-router-dom';
-import database from './base'
-import { getDatabase, ref, set, remove, onValue } from 'firebase/database';
+import firestore from './base';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import './animation.css'
+import './animation.css';
 
 const App = () => {
-  let {login} = useParams()
+  const { login } = useParams();
+  const [messages, setMessages] = useState([]);
+  const [pseudo, setPseudo] = useState(login);
+  const messageRef = useRef();
+  const nodeRef = useRef();
 
-  const [pseudo, setPseudo] = useState(login)
-  const [messages, setMessages] = useState({})
-  const messageRef = useRef()
-  // pour CSSTransition
-  const nodeRef = useRef()
-
-  useEffect(()=>{
-    console.log('test')
-    // const divMessage = document.querySelectorAll('.box')
-    // console.log(divMessage)
-    console.log(messageRef)
-    // query
-    const dbMessagesRef = ref(database,'messages')
-    // écouter les event de changement des données (sur Firebase)
-    onValue(dbMessagesRef, (snapshot) => {
-      const data = snapshot.val()
-      if(data)
-      {
-        setMessages(data)
+  useEffect(() => {
+    const dbMessagesRef = doc(firestore, 'messages', 'NuP0iEPUq2nb4MshdfRf');
+    
+    onSnapshot(dbMessagesRef, (snapshot) => {
+      const data = snapshot.data();
+      if (data) {
+        // Modifier pour ne récupérer que les 10 derniers messages
+        const lastTenMessages = data.messages.slice(-10);
+        setMessages(lastTenMessages || []);
       }
-    })
-  },[])
+    });
+  }, [login]);
 
-  const addMessage = message => {
-    const newMessages = {...messages}
-    newMessages[`message-${Date.now()}`] = message
-    Object.keys(newMessages).slice(0,-10).forEach(key=>{
-      newMessages[key] = null
-    })
-    // setMessages(newMessages)
-    set(ref(database,'/'),{
-      messages: newMessages
-    })
-  }
+  const addMessage = (message) => {
+    const newMessages = [...messages, { id: Date.now(), ...message }];
+   
+    // Limiter la taille du tableau à 10 messages
+    const limitedMessages = newMessages.slice(-10);
 
-  const isUser = paramPseudo => paramPseudo === pseudo
+    const messagesCollectionRef = doc(firestore, 'messages', 'NuP0iEPUq2nb4MshdfRf');
 
-  const myMessages = Object.keys(messages).map(key => (
-    <CSSTransition
-      key={key}
-      timeout={200}
-      classNames={'fade'}
-      nodeRef={nodeRef}
-    >
-      <Message 
-        pseudo={messages[key].pseudo}
-        message={messages[key].message}
-        isUser={isUser}
-      />
-    </CSSTransition>
-  ))
+    setDoc(messagesCollectionRef, { messages: limitedMessages });
+  };
 
-  return ( 
-    <div className="box">
+  const isUser = (myPseudo) => myPseudo === pseudo;
+
+  const myMessages = messages.map(
+    (message) => (
+      <CSSTransition
+        timeout={200}
+        classNames='fade'
+        key={message.id}
+        nodeRef={nodeRef}
+      >
+        <Message
+          isUser={isUser}
+          pseudo={message.pseudo}
+          message={message.message}
+        />
+      </CSSTransition>
+    )
+  );
+
+  return (
+    <div className='box'>
       <div>
         <div className="messages" ref={messageRef}>
           <TransitionGroup className="message">
@@ -72,13 +67,13 @@ const App = () => {
           </TransitionGroup>
         </div>
       </div>
-      <Formulaire 
+      <Formulaire
+        length={150}
         pseudo={pseudo}
         addMessage={addMessage}
-        length={150}
       />
     </div>
-   );
-}
- 
+  );
+};
+
 export default App;
